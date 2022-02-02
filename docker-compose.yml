@@ -1,0 +1,84 @@
+version: '3.7'
+
+services:
+  infinispan:
+    image: infinispan/server:13.0.2.Final
+    ports:
+        - "11222:11222"
+    networks: 
+      - kogito
+    volumes:
+    - type: bind
+      source: ./infinispan/infinispan-config.xml
+      target: /opt/infinispan/server/conf/infinispan-config.xml
+      read_only: true
+    - type: bind
+      source: ./infinispan/users.properties
+      target: /opt/infinispan/server/conf/users.properties
+      read_only: true
+    - type: bind
+      source: ./infinispan/groups.properties
+      target: /opt/infinispan/server/conf/groups.properties
+      read_only: true
+    command: "-c /opt/infinispan/server/conf/infinispan-config.xml"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11222/rest/v2/cache-managers/default/health/status"]
+      interval: 1s
+      timeout: 1s
+      retries: 50
+
+  redpanda:
+    command:
+    - redpanda
+    - start
+    - --smp
+    - '1'
+    - --reserve-memory
+    - 0M
+    - --overprovisioned
+    - --node-id
+    - '0'
+    - --kafka-addr
+    - PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+    - --advertise-kafka-addr
+    - PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
+    image: docker.vectorized.io/vectorized/redpanda:v21.11.2
+    container_name: redpanda-1
+    ports:
+    - 9092:9092
+    - 29092:29092
+    networks: 
+      - kogito
+
+
+  data-index:
+    image: quay.io/kiegroup/kogito-data-index-infinispan:1.15.0
+    ports:
+    - published: 8180
+      target: 8080
+      protocol: tcp
+    networks: 
+      - kogito
+    depends_on:
+      redpanda:
+        condition: service_started
+      infinispan:
+        condition: service_healthy
+    volumes:
+    - type: bind
+      source: ./protobuf
+      target: /home/kogito/data/protobufs/
+      read_only: true
+    environment:
+      QUARKUS_INFINISPAN_CLIENT_SERVER_LIST: infinispan:11222
+      QUARKUS_INFINISPAN_CLIENT_AUTH_USERNAME: infiniadmin
+      QUARKUS_INFINISPAN_CLIENT_AUTH_PASSWORD: password
+      KOGITO_DATA_INDEX_PROPS: -Dkogito.protobuf.folder=/home/kogito/data/protobufs/ -Dquarkus.log.console.level=DEBUG -Dquarkus.log.category.“org.kie.kogito”.min-level=DEBUG -Dquarkus.log.category.“org.kie.kogito”.level=DEBUG
+      KAFKA_BOOTSTRAP_SERVERS: redpanda:29092
+    labels:
+     kogito-dev-service-data-index: kogito-data-index
+
+networks:
+  kogito:
+    driver: bridge
+

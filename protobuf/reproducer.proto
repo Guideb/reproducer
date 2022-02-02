@@ -1,0 +1,21 @@
+syntax = "proto2"; 
+package org.acme.reproducer; 
+import "kogito-index.proto";
+import "kogito-types.proto";
+option kogito_model = "Reproducer";
+option kogito_id = "reproducer";
+
+/* @Indexed */ 
+message Reproducer { 
+	option java_package = "org.acme";
+	/* @Field(index = Index.YES, store = Store.YES) @SortableField */ 
+	optional string id = 1; 
+	/* @Field(index = Index.YES, store = Store.YES) @SortableField
+ @VariableInfo(tags="input") */ 
+	optional int32 size = 2; 
+	/* @Field(index = Index.YES, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional string string = 3; 
+	/* @Field(index = Index.YES, store = Store.YES) @SortableField */ 
+	optional org.kie.kogito.index.model.KogitoMetadata metadata = 4; 
+}
