@@ -8,7 +8,7 @@ Then run the kogito process (at the project root) :
 
 > mvn compile quarkus:dev
 
-The kogito process uses the port 8080, make sur it is not already in use.
+The kogito process uses the port 8080, make sure it is not already in use.
 
 The kogito process is very simple, it takes an int and create a string the size of the int and print it. It then stop and try to get persisted in infinispan. Using any number above 32765 is going to trigger the bug.
 
