@@ -10,7 +10,7 @@ Then run the kogito process (at the project root) :
 
 The kogito process uses the port 8080, make sur it is not already in use.
 
-The kogito process is very simple, it takes an int and create a string the size of the int. It then stop and try to get persisted in infinispan. Using any number above 32765 is going to trigger the bug.
+The kogito process is very simple, it takes an int and create a string the size of the int and print it. It then stop and try to get persisted in infinispan. Using any number above 32765 is going to trigger the bug.
 
 Steps to reproduce the bug :
 
@@ -32,4 +32,4 @@ Open http://localhost:11222/console/cache/reproducer_domain , the process should
 
 > curl -d '{"size": 5}' -H "Content-Type: application/json" -X POST http://localhost:8080/reproducer
 
-Open http://localhost:11222/console/cache/reproducer_domain , see that this time nothing is persisted.
+Open http://localhost:11222/console/cache/reproducer_domain , see that this time nothing is persisted. You can see that the kogito process is still working on the console because the created string is printed, but infinispan is not persisting the process anymore.
